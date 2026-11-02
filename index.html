@@ -152,33 +152,79 @@ for(let i=0;i<65;i++){
  tree(Math.cos(a)*r,Math.sin(a)*r);
 }
 
-// Player
-const player=new THREE.Group();
 
-const body=new THREE.Mesh(
- new THREE.CapsuleGeometry(.65,.9,4,8),
- new THREE.MeshStandardMaterial({color:0x2467b1})
+// PLAYER CHARACTER UPGRADE
+const player = new THREE.Group();
+
+const skin = new THREE.MeshStandardMaterial({color:0xd9a078});
+const shirt = new THREE.MeshStandardMaterial({color:0x263f75});
+const pants = new THREE.MeshStandardMaterial({color:0x30343c});
+const shoes = new THREE.MeshStandardMaterial({color:0x171b20});
+const bag = new THREE.MeshStandardMaterial({color:0x354b35});
+
+function part(geometry, material, x, y, z) {
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  player.add(mesh);
+  return mesh;
+}
+
+// Body
+part(new THREE.CapsuleGeometry(0.38,0.75,5,10),
+     shirt,0,1.35,0);
+
+// Head
+part(new THREE.SphereGeometry(0.29,20,16),
+     skin,0,2.12,0);
+
+// Neck
+part(new THREE.CylinderGeometry(0.12,0.13,0.18,12),
+     skin,0,1.87,0);
+
+// Backpack
+part(new THREE.BoxGeometry(0.55,0.65,0.28),
+     bag,0,1.38,-0.42);
+
+// Arms
+const leftArm = part(
+  new THREE.CapsuleGeometry(0.13,0.55,4,8),
+  shirt,-0.49,1.38,0
 );
-body.position.y=1.35;
-body.castShadow=true;
-player.add(body);
+leftArm.rotation.z = -0.12;
 
-const head=new THREE.Mesh(
- new THREE.SphereGeometry(.42,16,12),
- new THREE.MeshStandardMaterial({color:0xd6a078})
+const rightArm = part(
+  new THREE.CapsuleGeometry(0.13,0.55,4,8),
+  shirt,0.49,1.38,0
 );
-head.position.y=2.35;
-player.add(head);
+rightArm.rotation.z = 0.12;
 
-const pack=new THREE.Mesh(
- new THREE.BoxGeometry(.9,.9,.35),
- new THREE.MeshStandardMaterial({color:0x263d31})
+// Hands
+part(new THREE.SphereGeometry(0.13,12,10),
+     skin,-0.5,1.05,0);
+part(new THREE.SphereGeometry(0.13,12,10),
+     skin,0.5,1.05,0);
+
+// Legs
+const leftLeg = part(
+  new THREE.CapsuleGeometry(0.17,0.55,4,8),
+  pants,-0.22,0.55,0
 );
-pack.position.set(0,1.4,-.65);
-player.add(pack);
+const rightLeg = part(
+  new THREE.CapsuleGeometry(0.17,0.55,4,8),
+  pants,0.22,0.55,0
+);
 
+// Shoes
+part(new THREE.BoxGeometry(0.3,0.18,0.42),
+     shoes,-0.22,0.12,0.08);
+part(new THREE.BoxGeometry(0.3,0.18,0.42),
+     shoes,0.22,0.12,0.08);
+
+// Add player to game
 player.position.set(0,2.6,0);
 scene.add(player);
+  
 
 // Camera
 let angle=0;
