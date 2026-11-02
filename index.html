@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BATTLE INDIA - 3D Prototype</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#78b9d5;font-family:Arial;color:white;touch-action:none}
+#game{position:fixed;inset:0}
+#hud{position:fixed;top:15px;left:15px;right:15px;display:flex;justify-content:space-between;pointer-events:none}
+.panel{background:#101a24cc;padding:12px 16px;border:1px solid #ffffff33;border-radius:12px}
+#controls{position:fixed;bottom:25px;left:25px;right:25px;display:flex;justify-content:space-between;align-items:end}
+#joy{width:125px;height:125px;border-radius:50%;background:#ffffff22;border:2px solid #ffffff77;position:relative;touch-action:none}
+#stick{width:48px;height:48px;border-radius:50%;background:#ffffffaa;position:absolute;left:36px;top:36px}
+.action{width:65px;height:65px;border-radius:50%;border:1px solid white;background:#182b3dcc;color:white;font-size:13px}
+#hint{position:fixed;top:85px;left:50%;transform:translateX(-50%);background:#101a2488;padding:8px 12px;border-radius:8px;font-size:12px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+  <div class="panel"><b>BATTLE INDIA</b><br><small>3D EXPLORATION</small></div>
+  <div class="panel">PLAYER 01<br><small>PROTOTYPE</small></div>
+</div>
+<div id="hint">Explore the 3D island</div>
+<div id="controls">
+  <div id="joy"><div id="stick"></div></div>
+  <button class="action" id="jump">JUMP</button>
+</div>
+
+<script type="importmap">
+{
+ "imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+ }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8bc9e5);
+scene.fog = new THREE.Fog(0x8bc9e5,45,150);
+
+const camera = new THREE.PerspectiveCamera(
+  65,innerWidth/innerHeight,0.1,300
+);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.getElementById('game').appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x506044,2));
+
+const sun=new THREE.DirectionalLight(0xffffff,2.5);
+sun.position.set(25,45,20);
+sun.castShadow=true;
+scene.add(sun);
+
+// Ocean
+const ocean=new THREE.Mesh(
+ new THREE.PlaneGeometry(300,300),
+ new THREE.MeshStandardMaterial({color:0x287ca7,roughness:0.8})
+);
+ocean.rotation.x=-Math.PI/2;
+ocean.position.y=-1;
+scene.add(ocean);
+
+// Island
+const island=new THREE.Mesh(
+ new THREE.CylinderGeometry(45,48,5,64),
+ new THREE.MeshStandardMaterial({color:0x63974c,roughness:1})
+);
+island.position.y=0;
+island.receiveShadow=true;
+scene.add(island);
+
+// Ground
+const ground=new THREE.Mesh(
+ new THREE.CircleGeometry(44,64),
+ new THREE.MeshStandardMaterial({color:0x78a85a})
+);
+ground.rotation.x=-Math.PI/2;
+ground.position.y=2.55;
+ground.receiveShadow=true;
+scene.add(ground);
+
+// Hills
+for(let i=0;i<12;i++){
+ const a=i*Math.PI/6;
+ const hill=new THREE.Mesh(
+  new THREE.ConeGeometry(5+Math.random()*4,8+Math.random()*8,8),
+  new THREE.MeshStandardMaterial({color:0x557a45})
+ );
+ hill.position.set(Math.cos(a)*29,3,Math.sin(a)*29);
+ hill.castShadow=true;
+ scene.add(hill);
+}
+
+// Buildings
+function building(x,z,w,h,d,color){
+ const b=new THREE.Mesh(
+  new THREE.BoxGeometry(w,h,d),
+  new THREE.MeshStandardMaterial({color})
+ );
+ b.position.set(x,2.6+h/2,z);
+ b.castShadow=true;
+ b.receiveShadow=true;
+ scene.add(b);
+
+ const roof=new THREE.Mesh(
+  new THREE.BoxGeometry(w+0.4,0.4,d+0.4),
+  new THREE.MeshStandardMaterial({color:0x574c3e})
+ );
+ roof.position.set(x,2.6+h+0.2,z);
+ scene.add(roof);
+}
+
+building(8,8,8,7,7,0xd2b18a);
+building(19,7,7,10,8,0xd8d0b8);
+building(-13,12,9,6,7,0xc79c69);
+building(-19,-8,8,8,9,0xb9c4ad);
+building(7,-17,10,7,8,0xd6c39d);
+building(-5,-20,8,6,8,0xb5a18a);
+
+// Trees
+function tree(x,z){
+ const trunk=new THREE.Mesh(
+  new THREE.CylinderGeometry(.3,.5,3,7),
+  new THREE.MeshStandardMaterial({color:0x765032})
+ );
+ trunk.position.set(x,4,z);
+ scene.add(trunk);
+
+ const leaves=new THREE.Mesh(
+  new THREE.SphereGeometry(2.2,8,7),
+  new THREE.MeshStandardMaterial({color:0x28633a})
+ );
+ leaves.position.set(x,6,z);
+ leaves.castShadow=true;
+ scene.add(leaves);
+}
+for(let i=0;i<65;i++){
+ const a=Math.random()*Math.PI*2;
+ const r=12+Math.random()*29;
+ tree(Math.cos(a)*r,Math.sin(a)*r);
+}
+
+// Player
+const player=new THREE.Group();
+
+const body=new THREE.Mesh(
+ new THREE.CapsuleGeometry(.65,.9,4,8),
+ new THREE.MeshStandardMaterial({color:0x2467b1})
+);
+body.position.y=1.35;
+body.castShadow=true;
+player.add(body);
+
+const head=new THREE.Mesh(
+ new THREE.SphereGeometry(.42,16,12),
+ new THREE.MeshStandardMaterial({color:0xd6a078})
+);
+head.position.y=2.35;
+player.add(head);
+
+const pack=new THREE.Mesh(
+ new THREE.BoxGeometry(.9,.9,.35),
+ new THREE.MeshStandardMaterial({color:0x263d31})
+);
+pack.position.set(0,1.4,-.65);
+player.add(pack);
+
+player.position.set(0,2.6,0);
+scene.add(player);
+
+// Camera
+let angle=0;
+let cameraDistance=9;
+let moveX=0,moveY=0;
+let jumping=false,velocityY=0;
+let lastTime=0;
+
+const keys={};
+window.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+
+// Touch joystick
+const joy=document.getElementById('joy');
+const stick=document.getElementById('stick');
+let joyActive=false;
+
+joy.addEventListener('pointerdown',e=>{
+ joyActive=true;
+ joy.setPointerCapture(e.pointerId);
+ updateJoy(e);
+});
+joy.addEventListener('pointermove',e=>{
+ if(joyActive) updateJoy(e);
+});
+function updateJoy(e){
+ const r=joy.getBoundingClientRect();
+ let x=e.clientX-(r.left+r.width/2);
+ let y=e.clientY-(r.top+r.height/2);
+ const len=Math.hypot(x,y);
+ if(len>40){x=x/len*40;y=y/len*40;}
+ moveX=x/40;
+ moveY=y/40;
+ stick.style.transform=`translate(${x}px,${y}px)`;
+}
+function releaseJoy(){
+ joyActive=false;moveX=0;moveY=0;
+ stick.style.transform='translate(0,0)';
+}
+joy.addEventListener('pointerup',releaseJoy);
+joy.addEventListener('pointercancel',releaseJoy);
+
+// Camera drag
+let dragging=false,previousX=0;
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(e.clientX>innerWidth*.4){
+ dragging=true;previousX=e.clientX;
+ }
+});
+window.addEventListener('pointermove',e=>{
+ if(dragging){
+  angle-=(e.clientX-previousX)*.006;
+  previousX=e.clientX;
+ }
+});
+window.addEventListener('pointerup',()=>dragging=false);
+
+// Jump
+document.getElementById('jump').addEventListener('pointerdown',()=>{
+ if(!jumping){jumping=true;velocityY=7;}
+});
+
+// Animation
+function animate(time){
+ requestAnimationFrame(animate);
+ const dt=Math.min((time-lastTime)/1000,.05)||0;
+ lastTime=time;
+
+ let x=moveX;
+ let y=moveY;
+
+ if(keys['w']||keys['arrowup'])y=-1;
+ if(keys['s']||keys['arrowdown'])y=1;
+ if(keys['a']||keys['arrowleft'])x=-1;
+ if(keys['d']||keys['arrowright'])x=1;
+
+ const forward=new THREE.Vector3(-Math.sin(angle),0,-Math.cos(angle));
+ const right=new THREE.Vector3(Math.cos(angle),0,-Math.sin(angle));
+
+ const direction=new THREE.Vector3();
+ direction.addScaledVector(right,x);
+ direction.addScaledVector(forward,-y);
+
+ if(direction.length()>1)direction.normalize();
+
+ const speed=(keys['shift']?9:5)*dt;
+ player.position.addScaledVector(direction,speed);
+
+ if(direction.length()>.05){
+  player.rotation.y=Math.atan2(direction.x,direction.z);
+ }
+
+ if(jumping){
+  player.position.y+=velocityY*dt;
+  velocityY-=18*dt;
+  if(player.position.y<=2.6){
+   player.position.y=2.6;
+   jumping=false;
+   velocityY=0;
+  }
+ }
+
+ // Keep player on island
+ const dist=Math.hypot(player.position.x,player.position.z);
+ if(dist>39){
+  player.position.x*=39/dist;
+  player.position.z*=39/dist;
+ }
+
+ const target=new THREE.Vector3(
+  player.position.x+Math.sin(angle)*cameraDistance,
+  player.position.y+5,
+  player.position.z+Math.cos(angle)*cameraDistance
+ );
+ camera.position.lerp(target,Math.min(1,dt*5));
+ camera.lookAt(player.position.x,player.position.y+1.5,player.position.z);
+
+ renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
+
+window.addEventListener('resize',()=>{
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+    </html>
+  
